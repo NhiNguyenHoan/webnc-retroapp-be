@@ -1,24 +1,23 @@
 const express = require('express');
-const { findOne } = require('../models/user.model');
 const router = express.Router();
 const User = require('../models/user.model');
 const hash = require('../middlewares/hashPassword');
+const bcrypt = require("bcryptjs");
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
   res.send('respond with a resource');
 });
 
-router.post('/', function(req, res, next) {
+router.post('/', function (req, res, next) {
   res.send(req.body);
-})
+});
 router.post("/createUser", async (req, res) => {
-  
+
   if (req.body) {
     const iuser = await User.findOne({
       username: req.body.username,
     })
-    if(iuser){
+    if (iuser) {
 
       res.sendStatus(422);
     }
@@ -34,8 +33,33 @@ router.post("/createUser", async (req, res) => {
 
   }
   else {
-      res.sendStatus(500);
+    res.sendStatus(500);
 
   }
 });
+
+router.post("/login", async (req, res) => {
+  await User.findOne({ username: req.body.username })
+    .then(data => {
+      console.log('data',data)
+      if (data) {
+        bcrypt.compare(req.body.password,data.password, function(err, respone) {
+          if(respone)
+          {
+          res.send(data);
+          console.log(data)
+          }
+      });
+      }
+      else {
+        res.sendStatus(400)
+      }
+
+    })
+    .catch(err => {
+      console.log('login failed', err)
+      res.sendStatus(400)
+
+    })
+})
 module.exports = router;
